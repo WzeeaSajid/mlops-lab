@@ -33,7 +33,7 @@ port_forward() {
  kubectl port-forward svc/wine-classifier -n ml-serving 8001:8000 >/tmp/model-forward.log 2>&1 &
  port_pid=$!
  echo "$port_pid" >/tmp/port-worker
- curl --retry 25 --retry-connrefused --retry-delay 1 -fsS http://localhost:8001/health
+ curl --retry 25 --retry-all-errors --retry-delay 1 -fsS http://localhost:8001/health
 }
 case "$1" in
 initial)
@@ -43,7 +43,7 @@ git clone "$repo" config
 gh run download 45857011587 --repo WzeeaSajid/mlops-lab --name model --dir model
 docker build -t wine-classifier:local --build-arg GIT_SHA=local .
 docker run -d --name wine -p 8000:8000 wine-classifier:local
-curl --retry 30 --retry-connrefused --retry-delay 2 -fsS http://localhost:8000/health
+curl --retry 30 --retry-all-errors --retry-delay 2 -fsS http://localhost:8000/health
 capture 11 38 <<'COMMAND'
 docker ps --filter name=wine --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
 curl -fsS http://localhost:8000/model-info | jq .
