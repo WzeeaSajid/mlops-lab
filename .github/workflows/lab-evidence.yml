@@ -1,0 +1,34 @@
+name: Lab deployment evidence
+on:
+  push:
+    branches: [lab-evidence]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare terminal and browser capture
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xterm imagemagick xvfb
+          python -m pip install playwright
+          minikube version
+      - name: Deploy initial image
+        run: bash evidence.sh initial
+      - name: Observe release and test self-healing
+        run: bash evidence.sh release
+      - name: Verify Git rollback
+        run: bash evidence.sh rollback
+      - name: Save actual screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab-deployment-screenshots
+          path: evidence/*.png
+          if-no-files-found: warn
